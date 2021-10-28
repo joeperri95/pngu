@@ -41,7 +41,6 @@ pub fn process_png(input_filename: String, output_filename: String, message: &St
             println!("Creating secret chunk"); 
             let secret_chunk = create_pngu_chunk(message);            
             let chunk_buf = secret_chunk.to_vec();
-            println!("{:?}", chunk_buf);
             out_file.write(&chunk_buf).expect("Could not write secret chunk to file");
         }
 

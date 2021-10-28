@@ -1,4 +1,4 @@
-use std::fs::{File, rename, remove_file};
+use std::fs::{File, create_dir, rename, remove_file};
 use std::io::Read;
 use std::path::Path;
 use std::env;
@@ -12,6 +12,11 @@ pub fn get_available_filename(filename: &str) -> String
     let filestem = Path::new(filename).file_stem().unwrap().to_str().unwrap();
 
     path.push("output");
+    if ! path.is_dir()
+    {
+        create_dir(&path).expect("Could not create output dir");
+    }
+
     path.push(filename);
     loop 
     {
