@@ -10,28 +10,28 @@ pub struct Chunk
 
 impl Chunk
 {
-
+    
+    #[allow(dead_code)]
     pub fn new(chunk_type: [u8;4], data: Vec<u8>) -> Chunk
     {
         let size = (data.len() + 4) as u32; 
 
-        let mut crc_buffer = &mut chunk_type.to_vec();
+        let crc_buffer = &mut chunk_type.to_vec();
         crc_buffer.extend(&data); 
         
         println!("{:?}", chunk_type);
         
         Chunk
         {
-            size: size,
+            size,
             chunk_type: str::from_utf8(&chunk_type).unwrap().to_string(),
-            data: data,
-            crc32: crc32(&crc_buffer),
+            data,
+            crc32: crc32(crc_buffer),
         }
     }
 
     pub fn from_buffer(data: &[u8]) -> Chunk
     {
-        let mut chunk: Chunk;
         let mut offset = 0;
         let mut chunk_size_data: [u8; 4] = Default::default();
         chunk_size_data.copy_from_slice(&data[offset..(offset + 4 )]);
@@ -99,11 +99,11 @@ fn crc32(data: &[u8]) -> u32
         8);
     }
 
-   return (crc_register ^ 0xffffffff) as u32;
+   (crc_register ^ 0xffffffff) as u32
 }
 
 // Create a png chunk with the secret message
-pub fn create_pngu_chunk(message: &String) -> Chunk 
+pub fn create_pngu_chunk(message: &str) -> Chunk 
 {
 
     // A tEXt chunk uses a key value scheme separated by a null byte
@@ -123,7 +123,7 @@ pub fn create_pngu_chunk(message: &String) -> Chunk
     Chunk
     {
         size: chunk_size,
-        chunk_type: chunk_type,
+        chunk_type,
         data: encoded_message,
         crc32: chunk_crc,
     }

@@ -72,5 +72,5 @@ pub fn get_random_png() -> String
         }
     }
 
-    downloaded_filename.to_string()
+    downloaded_filename
 }

@@ -3,18 +3,6 @@
 version = 3
 
 [[package]]
-name = "PNGu"
-version = "0.1.0"
-dependencies = [
- "hex",
- "image",
- "png 0.17.2",
- "rand",
- "reqwest",
- "structopt",
-]
-
-[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -832,6 +820,18 @@ dependencies = [
  "deflate 0.9.1",
  "encoding",
  "miniz_oxide 0.4.4",
+]
+
+[[package]]
+name = "pngu"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "image",
+ "png 0.17.2",
+ "rand",
+ "reqwest",
+ "structopt",
 ]
 
 [[package]]

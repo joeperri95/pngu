@@ -2,7 +2,6 @@ use std::fs::{File, create_dir, rename, remove_file};
 use std::io::Read;
 use std::path::Path;
 use std::env;
-use image;
 
 // Check if filename is available. If it is not try again with an appended number
 pub fn get_available_filename(filename: &str) -> String
@@ -31,7 +30,7 @@ pub fn get_available_filename(filename: &str) -> String
     }
 
     let downloaded_filename = format!("{}", path.display());
-    downloaded_filename.to_string()
+    downloaded_filename
 }
 
 // using the image crate convert a downloaded jpeg file to a png
@@ -40,7 +39,6 @@ pub fn convert_jpg_to_png(filename: &str)
     if is_png(filename)
     {
         println!("Nothing to do");
-        return;
     }
     else if is_jpeg(filename)
     {
@@ -48,12 +46,12 @@ pub fn convert_jpg_to_png(filename: &str)
         let basepath = Path::new(filename).parent().unwrap().to_str().unwrap().to_string();
         let filestem = Path::new(filename).file_stem().unwrap().to_str().unwrap().to_string();
         let jpeg_path = basepath.clone() + "/" + &filestem +".jpg";
-        let png_path = basepath.clone() + "/" + &filestem + ".png";
+        let png_path = basepath + "/" + &filestem + ".png";
         
-        rename(&filename, &jpeg_path);
-        let img = image::open(&jpeg_path).unwrap();
-        img.save(png_path); 
-        remove_file(&jpeg_path);
+        rename(&filename, &jpeg_path).expect("Could not rename file");
+        let img = image::open(&jpeg_path).expect("Could nor open file");
+        img.save(png_path).expect("Could not save file"); 
+        remove_file(&jpeg_path).unwrap();
     }
     else
     {
@@ -68,16 +66,9 @@ pub fn is_jpeg(filename: &str) -> bool
 
     let mut file = File::open(filename).expect("Can't open file");
     let mut data: [u8; 2] = [0;2];
-    file.read(&mut data).expect("Can't read file");
+    file.read_exact(&mut data).expect("Can't read file");
     
-    if (data[0] == 0xFF) && (data[1] != 0xFF) && (data[1] != 0x00)
-    {
-        true
-    }
-    else
-    {
-        false
-    }
+    (data[0] == 0xFF) && (data[1] != 0xFF) && (data[1] != 0x00)
 }
 
 // Check if the file has the png signature
@@ -89,11 +80,11 @@ pub fn is_png(filename: &str) -> bool
     const SIGNATURE: [u8;8] = [137,80,78,71,13,10,26,10];
     let mut ret = true;
 
-    file.read(&mut data).expect("Can't read file");
+    file.read_exact(&mut data).expect("Can't read file");
 
     for i in 0..8
     {
-        ret = if data[i] == SIGNATURE[i] {true} else {false};
+        ret = data[i] == SIGNATURE[i];
     }
 
     ret

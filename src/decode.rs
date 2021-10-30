@@ -31,13 +31,13 @@ pub fn process_png(filename: String) -> String {
         if chunk_type == "tEXt"
         {                        
             let ret = str::from_utf8(&chunk.data).unwrap().to_string();
-            let mut msg: Vec<&str> = ret.split("\u{0}").collect(); 
+            let msg: Vec<&str> = ret.split('\u{0}').collect(); 
             println!("{:?}", msg[1]);
             return msg[1].to_string(); 
         }
 
         offset += chunk_total_size;
-        quit = if chunk_type == "IEND" {true} else {false};
+        quit = chunk_type == "IEND";
     }
 
     "".to_string()

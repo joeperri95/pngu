@@ -69,8 +69,6 @@ fn main() {
             decode::process_png(input.to_str().unwrap().to_string());
         },
     };
-    return;
-
 }
 
 
