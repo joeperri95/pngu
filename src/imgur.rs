@@ -49,28 +49,9 @@ pub fn get_random_png() -> String
 
     let downloaded_filename = utils::get_available_filename("image.png");
     
-    loop{
-        download_random_imgur_file(&downloaded_filename).expect("Could not get file from imgur");
-
-        if ! utils::is_png(&downloaded_filename.to_string())
-        {
-            if utils::is_jpeg(&downloaded_filename)
-            {
-               println!("Converting {} jpeg to png", &downloaded_filename);
-               utils::convert_jpg_to_png(&downloaded_filename);
-               break;
-            }
-            else
-            {
-                println!("Invalid PNG file");
-            }
-        }
-        else
-        {
-            println!("Good png file");
-            break;
-        }
-    }
+    download_random_imgur_file(&downloaded_filename).expect("Could not get file from imgur");
+    utils::convert_to_png(&downloaded_filename);
 
     downloaded_filename
 }
+

@@ -1,5 +1,6 @@
 use std::str;
 
+#[derive(Eq, PartialEq, Debug)]
 pub struct Chunk
 {
     pub size: u32,
@@ -8,58 +9,59 @@ pub struct Chunk
     pub crc32: u32,
 }
 
+#[derive(Eq, PartialEq, Debug)]
+pub enum ChunkCreationError
+{
+    EmptyMessage,
+    InvalidCRC,
+}
+
+
 impl Chunk
 {
-    
-    #[allow(dead_code)]
-    pub fn new(chunk_type: [u8;4], data: Vec<u8>) -> Chunk
-    {
-        let size = (data.len() + 4) as u32; 
-
-        let crc_buffer = &mut chunk_type.to_vec();
-        crc_buffer.extend(&data); 
-        
-        println!("{:?}", chunk_type);
-        
-        Chunk
-        {
-            size,
-            chunk_type: str::from_utf8(&chunk_type).unwrap().to_string(),
-            data,
-            crc32: crc32(crc_buffer),
-        }
-    }
-
-    pub fn from_buffer(data: &[u8]) -> Chunk
+    // create a png chunk from bytes
+    pub fn from_buffer(data: &[u8]) -> Result<Chunk, ChunkCreationError>
     {
         let mut offset = 0;
+        let mut crc_buffer: Vec<u8> = Vec::default();
+
         let mut chunk_size_data: [u8; 4] = Default::default();
-        chunk_size_data.copy_from_slice(&data[offset..(offset + 4 )]);
+        chunk_size_data.copy_from_slice(&data[offset..(offset + 4)]);
+        
         let chunk_size = u32::from_be_bytes(chunk_size_data);
         offset += 4;
         
         let chunk_type_data = &data[offset..(offset + 4)];
         let chunk_type = std::str::from_utf8(chunk_type_data).unwrap();
+        crc_buffer.extend(chunk_type.as_bytes());
+
         offset += 4;
 
         let chunk_data = &data[offset..(offset + chunk_size as usize)];
         let mut data_vec = Vec::new();
+        
         for i in chunk_data.iter()
         {
             data_vec.push(*i);
+            crc_buffer.push(*i);
         }
         offset += chunk_size as usize;
 
         let mut chunk_crc_data: [u8;4] = Default::default();
         chunk_crc_data.copy_from_slice(&data[offset..(offset + 4)]);
         let chunk_crc = u32::from_be_bytes(chunk_crc_data);
-        
-        Chunk
+        if chunk_crc == crc32(&crc_buffer){
+            Ok(Chunk
+            {
+                size: chunk_size,
+                chunk_type: chunk_type.to_string(),
+                data: data_vec, 
+                crc32: chunk_crc,
+            })
+        }
+        else
         {
-            size: chunk_size,
-            chunk_type: chunk_type.to_string(),
-            data: data_vec, 
-            crc32: chunk_crc,
+            Err(ChunkCreationError::InvalidCRC)
         }
     }
 
@@ -73,10 +75,10 @@ impl Chunk
 
         result
     }
-
 }
 
 // compute and return the CRC32 of data
+// algorithm described in rfc2083
 fn crc32(data: &[u8]) -> u32
 {
 
@@ -103,8 +105,13 @@ fn crc32(data: &[u8]) -> u32
 }
 
 // Create a png chunk with the secret message
-pub fn create_pngu_chunk(message: &str) -> Chunk 
+pub fn create_pngu_chunk(message: &str) -> Result<Chunk,ChunkCreationError> 
 {
+
+    if message.is_empty() 
+    {
+        return Err(ChunkCreationError::EmptyMessage);
+    }
 
     // A tEXt chunk uses a key value scheme separated by a null byte
     // Our secret message is stored under the PNGu keyword
@@ -116,15 +123,45 @@ pub fn create_pngu_chunk(message: &str) -> Chunk
 
     encoded_message.extend(message.as_bytes().to_vec());
     let mut crc_buffer: Vec<u8> = Vec::new();
-
+    
+    crc_buffer.extend(chunk_type.as_bytes().to_vec());
     crc_buffer.extend(&encoded_message);
     let chunk_crc = crc32(&crc_buffer);
-    
-    Chunk
+   
+    Ok(Chunk
     {
         size: chunk_size,
         chunk_type,
         data: encoded_message,
         crc32: chunk_crc,
-    }
+    })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*; 
+
+    #[test]
+   fn empty_message()
+   {
+        let message = "";
+        let chunk = create_pngu_chunk(message);
+        assert_eq!(chunk.is_err(), true);
+        assert_eq!(chunk, Err(ChunkCreationError::EmptyMessage));
+   }
+
+   #[test]
+   fn good_message()
+   {
+        let message = "This is a super secret test";
+        let chunk = create_pngu_chunk(message);
+        assert_eq!(chunk.is_ok(), true); 
+        assert_eq!(chunk.unwrap(), Chunk {
+            size: 32, 
+            chunk_type: "tEXt".to_string(),
+            data: "PNGu\0This is a super secret test".as_bytes().to_vec(),
+            crc32:146701701,  
+        });
+   }
 }

@@ -2,15 +2,13 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 mod imgur;
-mod decode;
-mod encode;
+mod pngu;
 mod utils;
 mod chunk;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name="PNGu")]
 enum Opt{
-
     Encode {
         #[structopt(short="w", long)]
         use_web: bool,
@@ -26,16 +24,14 @@ enum Opt{
     },
 
     Decode {
-        #[structopt(short, long, parse(from_os_str))]
+        #[structopt(short="i", long, parse(from_os_str))]
         input: PathBuf,
-
     },
 }
 
 fn main() {
     
     let opt= Opt::from_args();
-    println!("{:#?}", opt);
     
     match opt
     {
@@ -62,13 +58,11 @@ fn main() {
             let output_available = utils::get_available_filename(&output_chosen); 
 
             println!("input {:?} output {:?}", filetodo, output_available);
-            encode::process_png(filetodo, output_available, &message);
-            println!("done");
+            pngu::encode(filetodo, output_available, &message);
+            println!("Done!");
         },
         Opt::Decode {input} => {
-            decode::process_png(input.to_str().unwrap().to_string());
+            pngu::decode(input.to_str().unwrap().to_string());
         },
     };
 }
-
-
