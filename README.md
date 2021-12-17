@@ -21,6 +21,11 @@ $ cargo run -- decode --input "inconspicuous-funny-image.png"
 Let's meet later and discuss our secret plans 
 ```
 
+## Demo
+
+https://user-images.githubusercontent.com/17062561/146496274-eedc414f-894b-4d86-b229-8a4de2f3aa31.mp4
+
+
 ## How it works
 
 PNG files are composed of chunks, most of which contain information about the image or actual image data. There are chunks in the PNG standard that allow for text strings to be stored as metadata in the image. pngu will create one of those text chunks with your message hidden inside.
